@@ -1,6 +1,6 @@
-# Multi-Agent CRM
+# Multi-Agent CRM Assistant
 
-**PoC 03** del AI Product Lab — un pipeline de CRM con inteligencia artificial que procesa mensajes de leads con una orquestación de agentes especializados, genera seguimiento automático y persiste todo en SQLite.
+Un PoC del AI Product Lab — un pipeline de CRM con inteligencia artificial que procesa mensajes de leads con una orquestación de agentes especializados, genera seguimiento automático y persiste todo en SQLite.
 
 > **Vivo en:** [github.com/MWarrior715/multi-agent-crm](https://github.com/MWarrior715/multi-agent-crm)
 
@@ -19,7 +19,7 @@ Recibe un mensaje de entrada (email, WhatsApp, web) y lo enruta por 6 agentes es
 | **Redactor de Propuesta** | Crea una propuesta de valor con estimación de precio. |
 | **Planificador de Tareas** | Define tareas de seguimiento con fechas relativas. |
 
-Todo se persiste en **SQLite** (`sqlmodel`) para consulta, auditoría y futuras integraciones.
+Todo se persiste en **SQLite** (`SQLModel`) para consulta, auditoría y futuras integraciones.
 
 ---
 
@@ -34,10 +34,9 @@ input text
 └─────────────┘
    │
    ▼
-┌─────────────┐
-┌─────────────┐
-│ Clasificador│ → Classification
-└─────────────┘
+┌──────────────┐
+│ Clasificador │ → Classification
+└──────────────┘
    │
    ▼
 ┌─────────────┐
@@ -49,9 +48,11 @@ input text
    └──────────► Task Planner     → Task[]
 ```
 
-- **Motor LLM enchufable**: implementación genérica de `LLMProvider` con respaldo `OpenAIProvider` (compatible con Ollama / OpenAI API). Los tests usan un LLM falso.
+- **Motor LLM enchufable**: abstracción `LLMProvider` con implementación OpenAI-compatible (motor local o cloud). Los tests usan un LLM falso.
 - **Persistencia**: `SQLModel` sobre SQLite.
-- **Interfaces**: CLI interactiva y FastAPI (`/process`, `/leads`, `/health`).
+- **Interfaces**: CLI interactiva y FastAPI.
+
+> Diagrama completo de capas en [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -69,12 +70,12 @@ Copia `.env.example` a `.env` y ajusta:
 cp .env.example .env
 ```
 
-Ejemplo con Ollama local:
+Ejemplo con motor local (API OpenAI-compatible):
 
 ```dotenv
 OPENAI_BASE_URL=http://localhost:11434/v1
 OPENAI_API_KEY=local-dev-key
-LLM_MODEL=glm-5.2:cloud
+LLM_MODEL=local-model
 DATABASE_URL=sqlite:///data/crm.db
 ```
 
@@ -101,9 +102,13 @@ uvicorn crm.api:app --reload
 ```
 
 Endpoints:
-- `POST /process` — procesa un mensaje y devuelve el pipeline completo.
-- `GET  /leads` — lista leads con resumen/clasificación.
+
+- `POST /leads` — procesa un mensaje y devuelve el pipeline completo.
+- `GET  /leads` — lista leads con score/categoría/resumen.
+- `GET  /leads/{lead_id}` — detalle completo de un lead (clasificación, emails, propuestas, tareas, historial).
 - `GET  /health` — healthcheck.
+
+> Ejemplos `curl` y esquemas de request/response en [API.md](API.md).
 
 ### Tests
 
@@ -117,21 +122,21 @@ pytest -q
 
 1. **Python puro, sin LangChain/LangGraph**. Reduce dependencias y deja el control del prompt/completado al orquestador.
 2. **Agentes con JSON forzado**. Cada agente devuelve JSON estructurado parseado por `pydantic`.
-3. **Modelo enchufable**. Fácil migración de Ollama local a OpenAI, Claude, Gemini o cualquier API compatible.
+3. **Modelo enchufable**. Fácil migración entre motor local y cualquier API OpenAI-compatible.
 4. **SQLite por defecto**. Ideal para demos y PoCs sin infraestructura.
 
----
-
-## Roadmap
-
-- [ ] Integración con email real (IMAP/SMTP o API de Gmail).
-- [ ] Webhook de WhatsApp/Telegram.
-- [ ] Dashboard UI con Next.js.
-- [ ] Caché de embeddings para clasificación semántica.
-- [ ] Historial de interacciones por lead.
+> Detalle y rationale completo en [DECISIONS.md](DECISIONS.md).
 
 ---
+
+## Documentación
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — diagrama de capas y patrones.
+- [DECISIONS.md](DECISIONS.md) — por qué Python puro, SQLModel, agentes secuenciales, etc.
+- [API.md](API.md) — referencia de endpoints y CLI.
+- [ROADMAP.md](ROADMAP.md) — canales reales, Postgres, dashboard.
+- [CHANGELOG.md](CHANGELOG.md)
 
 ## Licencia
 
-MIT
+[MIT](LICENSE).
