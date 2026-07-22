@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Secrets / config local
+.env
+
+# Base de datos SQLite local (se regenera)
+data/*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
